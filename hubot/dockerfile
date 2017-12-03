@@ -1,0 +1,19 @@
+FROM node
+MAINTAINER ma1979
+
+ENV TZ=Asia/Tokyo
+
+RUN npm install -g yo generator-hubot
+RUN npm list -g yo generator-hubot
+RUN useradd bot
+RUN mkdir /home/bot && chown bot.bot /home/bot
+
+USER bot
+WORKDIR /home/bot
+RUN  yo hubot --owner "ma1979" --name "bot" --description "Hubot image" --adapter slack
+# trello
+RUN npm install node-trello
+RUN npm install cron
+ADD scripts/trello.coffee scripts
+
+CMD cd /home/bot; bin/hubot --adapter slack
