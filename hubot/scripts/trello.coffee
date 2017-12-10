@@ -68,6 +68,16 @@ module.exports = (robot) ->
     msg += card.shortUrl + "\n"
     return msg
 
+  createMsg5 = (card, due) ->
+    member = getMemberNameByID(card.idMembers[0])
+    msg = ""
+    if member?
+      msg += "@" + member + " "
+    msg += "タスク警察や！" + "\n"
+    msg += "「" + card.name + "」は明日の " + due.format("H:mm") + " が期限やで！\n"
+    msg += card.shortUrl + "\n"
+    return msg
+
   getOrganizationsMembers()
 
   cronJobDaily = new cronJob("0 0 9 * * *", () ->
@@ -96,14 +106,17 @@ module.exports = (robot) ->
           if diff == 0
             msg = createMsg1(card, due)
             robot.send(envelope, msg)
+          if diff == 1
+            msg = createMsg5(card, due)
+            robot.send(envelope, msg)        
   )
   cronJobDaily.start()
 
-  cronJobHourly = new cronJob("0 */30 * * * *", () ->
+  cronJobHourly = new cronJob("0 0 * * * *", () ->
     now = moment()
     envelope = room: process.env.HUBOT_SLACK_CHANNEL
 
-    trello.get "/1/boards/#{process.env.HUBOT_TRELLO_BOARD_ID}/cards", {}, (err, data) ->
+    trello.get "/1/boards/#{process.env.HUBOT_TRELLO_BOARD_ID}/cards/open", {}, (err, data) ->
       if err
         robot.send(err)
         return
