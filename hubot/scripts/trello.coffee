@@ -112,7 +112,7 @@ module.exports = (robot) ->
   )
   cronJobDaily.start()
 
-  cronJobHourly = new cronJob("0 0 * * * *", () ->
+  cronJobHourly = new cronJob("0 0,30 * * * *", () ->
     now = moment()
     envelope = room: process.env.HUBOT_SLACK_CHANNEL
 
