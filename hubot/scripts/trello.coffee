@@ -34,17 +34,17 @@ module.exports = (robot) ->
     if member?
       msg += "@" + member + " "
     msg += "タスク警察や！" + "\n"
-    msg += "「" + card.name + "」は今日の " + due.format("H:mm") + " が期限やで！\n"
+    msg += "「" + card.name.replace(REGEXP_START_DATE, "") + "」は今日の " + due.format("H:mm") + " が期限やで！\n"
     msg += card.shortUrl + "\n"
     return msg
 
-  createMsg2 = (card, due) ->
+  createMsg2 = (card, due, diff) ->
     member = getMemberNameByID(card.idMembers[0])
     msg = ""
     if member?
       msg += "@" + member + " "
     msg += "タスク警察や！" + "\n"
-    msg += "「" + card.name + "」はあと1時間で期限の " + due.format("H:mm") + " やで！\n"
+    msg += "「" + card.name.replace(REGEXP_START_DATE, "") + "」はあと #{Math.abs(diff)} 分で期限の " + due.format("H:mm") + " やで！\n"
     msg += card.shortUrl + "\n"
     return msg
 
@@ -54,7 +54,7 @@ module.exports = (robot) ->
     if member?
       msg += "@" + member + " "
     msg += "タスク警察や！" + "\n"
-    msg += "「" + card.name + "」が期限の " + due.format("YYYY/MM/DD H:mm") + " を超えとるで！\n"
+    msg += "「" + card.name.replace(REGEXP_START_DATE, "") + "」が期限の " + due.format("YYYY/MM/DD H:mm") + " を超えとるで！\n"
     msg += card.shortUrl + "\n"
     return msg
 
@@ -74,7 +74,7 @@ module.exports = (robot) ->
     if member?
       msg += "@" + member + " "
     msg += "タスク警察や！" + "\n"
-    msg += "「" + card.name + "」は明日の " + due.format("H:mm") + " が期限やで！\n"
+    msg += "「" + card.name.replace(REGEXP_START_DATE, "") + "」は明日の " + due.format("H:mm") + " が期限やで！\n"
     msg += card.shortUrl + "\n"
     return msg
 
@@ -129,7 +129,7 @@ module.exports = (robot) ->
           if diffDays == 0
             diffHours = now.diff(due, 'minutes')
             if diffHours >= -60 and diffHours <=0
-              msg = createMsg2(card, due)
+              msg = createMsg2(card, due, diffHours)
               robot.send(envelope, msg)
 
       # 期限超過
