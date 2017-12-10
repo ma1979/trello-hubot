@@ -13,6 +13,8 @@ module.exports = (robot) ->
     process.env.HUBOT_TRELLO_TOKEN
   )
 
+  REGEXP_START_DATE = /\[([^\]]*)\]/
+
   getOrganizationsMembers = ->
     url = "/1/organizations/#{ORG}/members"
     trello.get url, (err, data) =>
@@ -56,16 +58,35 @@ module.exports = (robot) ->
     msg += card.shortUrl + "\n"
     return msg
 
+  createMsg4 = (card, start) ->
+    member = getMemberNameByID(card.idMembers[0])
+    msg = ""
+    if member?
+      msg += "@" + member + " "
+    msg += "タスク警察や！" + "\n"
+    msg += "「" + card.name.replace(REGEXP_START_DATE, "") + "」は今日 " + start.format("H:mm") + " からスタートやで！\n"
+    msg += card.shortUrl + "\n"
+    return msg
+
   getOrganizationsMembers()
 
   cronJobDaily = new cronJob("0 0 9 * * *", () ->
     now = moment()
     envelope = room: process.env.HUBOT_SLACK_CHANNEL
 
-    trello.get "/1/boards/#{process.env.HUBOT_TRELLO_BOARD_ID}/cards", {}, (err, data) ->
+    trello.get "/1/boards/#{process.env.HUBOT_TRELLO_BOARD_ID}/cards/open", {}, (err, data) ->
       if err
         robot.send(err)
         return
+      # 開始日の9:00
+      for card in data
+        start = card.name.match REGEXP_START_DATE
+        if start?
+          start = moment(start[1])
+          diff = now.diff(start, 'days')
+          if diff == 0
+            msg = createMsg4(card, start)
+            robot.send envelope, msg
 
       # 期限日の9:00
       for card in data
@@ -78,7 +99,7 @@ module.exports = (robot) ->
   )
   cronJobDaily.start()
 
-  cronJobHourly = new cronJob("0 */10 * * * *", () ->
+  cronJobHourly = new cronJob("0 */30 * * * *", () ->
     now = moment()
     envelope = room: process.env.HUBOT_SLACK_CHANNEL
 
